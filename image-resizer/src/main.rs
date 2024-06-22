@@ -5,20 +5,28 @@ use std::path::{Path, PathBuf};
 
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
-    if args.len() != 4 {
-        eprintln!("Usage: {} <IMAGE_PATH> <WIDTH> <HEIGHT>", args[0]);
+    if args.len() != 5 {
+        eprintln!(
+            "Usage: {} <IMAGE_PATH> <WIDTH> <HEIGHT> <OUTPUT_PATH>",
+            args[0]
+        );
         std::process::exit(1);
     }
 
     let image_path = PathBuf::from(&args[1]);
+
     let width: u32 = args[2]
         .parse()
-        .map_err(|_| anyhow::anyhow!("Invalid width"))?;
+        .map_err(|e| anyhow::anyhow!("Invalid width: {e}"))?;
+
     let height: u32 = args[3]
         .parse()
-        .map_err(|_| anyhow::anyhow!("Invalid height"))?;
+        .map_err(|e| anyhow::anyhow!("Invalid height: {e}"))?;
+
+    let output_path = PathBuf::from(&args[4]);
 
     let result = resize_image(&image_path, width, height)?;
+    result.save(&output_path)?;
 
     println!("Resized image size: {}x{}", result.width(), result.height());
 
