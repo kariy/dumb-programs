@@ -1,44 +1,73 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
-use image::open;
-use std::env;
-use std::path::{Path, PathBuf};
+use clap::Parser;
+use image::{open, DynamicImage};
+
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+struct Cli {
+    #[clap(subcommand)]
+    command: Commands,
+}
+
+#[derive(clap::Subcommand)]
+enum Commands {
+    /// Resize an image
+    Resize {
+        /// Path to the input image
+        input: PathBuf,
+
+        /// New width for the image
+        width: u32,
+
+        /// New height for the image
+        height: u32,
+
+        /// Path to save the resized image
+        #[arg(long)]
+        output: PathBuf,
+    },
+
+    /// Display information about an image
+    Info {
+        /// Path to the input image
+        #[clap(value_parser)]
+        input: PathBuf,
+    },
+}
 
 fn main() -> Result<()> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 5 {
-        eprintln!(
-            "Usage: {} <IMAGE_PATH> <WIDTH> <HEIGHT> <OUTPUT_PATH>",
-            args[0]
-        );
-        std::process::exit(1);
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::Resize {
+            input,
+            width,
+            height,
+            output,
+        } => {
+            let result = resize_image(input, width, height)?;
+            result.save(output)?;
+            println!("Resized image size: {}x{}", result.width(), result.height());
+        }
+
+        Commands::Info { input } => {
+            let img = open(input)?;
+            println!("Image dimensions: {}x{}", img.width(), img.height());
+            println!("Image color type: {:?}", img.color());
+        }
     }
-
-    let image_path = PathBuf::from(&args[1]);
-
-    let width: u32 = args[2]
-        .parse()
-        .map_err(|e| anyhow::anyhow!("Invalid width: {e}"))?;
-
-    let height: u32 = args[3]
-        .parse()
-        .map_err(|e| anyhow::anyhow!("Invalid height: {e}"))?;
-
-    let output_path = PathBuf::from(&args[4]);
-
-    let result = resize_image(&image_path, width, height)?;
-    result.save(&output_path)?;
-
-    println!("Resized image size: {}x{}", result.width(), result.height());
 
     Ok(())
 }
 
 fn resize_image(
-    image_path: impl AsRef<Path>,
+    image_path: impl AsRef<std::path::Path>,
     width: u32,
     height: u32,
-) -> Result<image::DynamicImage> {
-    let img = open(image_path).expect("Failed to open image");
+) -> Result<DynamicImage> {
+    let img = open(image_path)?;
     Ok(img.resize(width, height, image::imageops::FilterType::Gaussian))
 }
 
