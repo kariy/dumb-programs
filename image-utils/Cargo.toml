@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name = "image-utils-cli"
+name = "image-utils"
 version = "0.1.0"
 
 [dependencies]
