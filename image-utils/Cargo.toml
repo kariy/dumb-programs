@@ -1,0 +1,9 @@
+[package]
+edition = "2021"
+name = "image-utils-cli"
+version = "0.1.0"
+
+[dependencies]
+anyhow = "1.0.86"
+clap = { version = "4.5.7", features = [ "derive" ] }
+image = "0.25.1"
